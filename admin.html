@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    body { background-color: #f0f4f8; }
+    body { background-color: #f0f4f8; font-family: 'Noto Sans Thai', sans-serif; }
     .main-container {
       background: rgba(255, 255, 255, 0.6);
       backdrop-filter: blur(10px);
@@ -197,15 +197,30 @@
     }
     document.addEventListener('DOMContentLoaded', applyStaggerAnimation);
 
-    // --- RENDER CARD FUNCTION ---
-    function createProblemCardHTML(id, roomId, userName, problemDesc, imgSrc, time) {
+    // --- NEW: Function to render status badge ---
+    function renderStatusBadge(status) {
+        const baseClasses = "status-badge cursor-pointer text-xs font-medium py-1 px-3 rounded-full flex-shrink-0 transition-colors";
+        switch(status) {
+            case 'in-progress':
+                return `<div class="${baseClasses} text-blue-600 bg-blue-100 hover:bg-blue-200">กำลังดำเนินการ</div>`;
+            case 'completed':
+                return `<div class="${baseClasses} text-green-600 bg-green-100 hover:bg-green-200">ดำเนินการแล้ว</div>`;
+            case 'pending':
+            default:
+                return `<div class="${baseClasses} text-orange-600 bg-orange-100 hover:bg-orange-200">รอดำเนินการ</div>`;
+        }
+    }
+
+    // --- RENDER CARD FUNCTION (MODIFIED) ---
+    function createProblemCardHTML(id, roomId, userName, problemDesc, imgSrc, time, status) {
         const imageHTML = imgSrc ? `<img src="${imgSrc}" class="w-full h-40 object-cover clickable-img cursor-pointer">` : '';
+        const statusBadgeHTML = renderStatusBadge(status);
         return `
             ${imageHTML}
             <div class="p-4 flex flex-col flex-grow">
-                <div class="flex justify-between items-center mb-2">
+                <div class="flex justify-between items-start mb-2">
                     <h4 class="font-bold text-slate-800 text-md truncate pr-2">${roomId}</h4>
-                    <div class="text-xs font-medium text-orange-600 bg-orange-100 py-1 px-3 rounded-full flex-shrink-0">รอดำเนินการ</div>
+                    ${statusBadgeHTML}
                 </div>
                 <p class="text-slate-600 text-sm mb-3 flex-grow h-12">${problemDesc}</p>
                 <div class="text-xs text-slate-400 mb-4">โดย: <strong>${userName}</strong> | ${time}</div>
@@ -217,10 +232,30 @@
         `;
     }
 
-    // --- Problem List Click Handler (Edit, Delete, View Image) ---
+    // --- Problem List Click Handler (MODIFIED) ---
     problemList.addEventListener('click', (e) => {
         const problemCard = e.target.closest('.problem-item');
         if (!problemCard) return;
+
+        // --- NEW: Handle Status Change ---
+        if (e.target.closest('.status-badge')) {
+            let currentStatus = problemCard.dataset.status;
+            let nextStatus;
+            
+            if (currentStatus === 'pending') nextStatus = 'in-progress';
+            else if (currentStatus === 'in-progress') nextStatus = 'completed';
+            else nextStatus = 'pending'; // Cycle back to pending
+
+            problemCard.dataset.status = nextStatus;
+            
+            // Replace the old badge with the new one
+            const oldBadge = problemCard.querySelector('.status-badge');
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = renderStatusBadge(nextStatus);
+            const newBadge = tempDiv.firstChild;
+            oldBadge.replaceWith(newBadge);
+            return;
+        }
 
         if (e.target.closest('.clickable-img')) {
             viewerImage.src = e.target.closest('.clickable-img').src;
@@ -260,7 +295,7 @@
         }
     });
 
-    // --- Form Submission Logic (Add & Edit) ---
+    // --- Form Submission Logic (MODIFIED) ---
     problemForm.addEventListener('submit', (e) => {
       e.preventDefault();
       
@@ -274,21 +309,24 @@
 
       if (currentEditingProblemElement) {
         // --- EDITING ---
+        const status = currentEditingProblemElement.dataset.status; // Preserve existing status on edit
         currentEditingProblemElement.dataset.roomId = roomId;
         currentEditingProblemElement.dataset.userName = userName;
         currentEditingProblemElement.dataset.problemDesc = problemDesc;
         currentEditingProblemElement.dataset.imgSrc = imgSrc;
-        currentEditingProblemElement.innerHTML = createProblemCardHTML(id, roomId, userName, problemDesc, imgSrc, formattedTime);
+        currentEditingProblemElement.innerHTML = createProblemCardHTML(id, roomId, userName, problemDesc, imgSrc, formattedTime, status);
       } else {
         // --- ADDING ---
         const newProblem = document.createElement('div');
+        const status = 'pending'; // NEW: Default status for new problems
         newProblem.className = "problem-item bg-white/80 rounded-xl shadow-lg border border-slate-200/60 transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 opacity-0 overflow-hidden flex flex-col";
         newProblem.dataset.id = id;
         newProblem.dataset.roomId = roomId;
         newProblem.dataset.userName = userName;
         newProblem.dataset.problemDesc = problemDesc;
         newProblem.dataset.imgSrc = imgSrc;
-        newProblem.innerHTML = createProblemCardHTML(id, roomId, userName, problemDesc, imgSrc, formattedTime);
+        newProblem.dataset.status = status; // NEW: Set status in dataset
+        newProblem.innerHTML = createProblemCardHTML(id, roomId, userName, problemDesc, imgSrc, formattedTime, status);
         problemList.prepend(newProblem);
         applyStaggerAnimation();
       }
