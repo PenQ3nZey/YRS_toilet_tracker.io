@@ -9,7 +9,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script>
+    // --- DARK MODE INITIALIZATION ---
+    // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+    // This checks local storage first, then system preference
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  </script>
+  <script>
     tailwind.config = {
+      darkMode: 'class', // Enable class-based dark mode
       theme: {
         extend: {
           fontFamily: {
@@ -22,11 +33,20 @@
   <style>
     body {
       background-color: #f0f4f8; /* Soft blue-gray background */
+      transition: background-color 0.3s ease-in-out;
+    }
+    .dark body {
+        background-color: #0f172a; /* Dark slate background for dark mode */
     }
     .main-container {
       background: rgba(255, 255, 255, 0.6);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: background-color 0.3s ease-in-out;
+    }
+    .dark .main-container {
+      background: rgba(26, 37, 58, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(20px); }
@@ -56,8 +76,12 @@
       <div class="flex items-center">
         <img src="image /Logo desige-Photoroom.png" alt="Logo" class="h-40 w-auto">
       </div>
-      <div class="text-slate-600 font-medium mt-4 sm:mt-0">
-        <button id="login-btn" class="ml-4 bg-white text-slate-700 font-semibold text-sm py-2 px-5 rounded-full hover:bg-slate-100 transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 flex items-center gap-2">
+      <div class="text-slate-600 dark:text-slate-300 font-medium mt-4 sm:mt-0 flex items-center gap-3">
+        <button id="theme-toggle-btn" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-300">
+            <svg id="theme-toggle-sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-slate-700 dark:text-slate-200"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
+            <svg id="theme-toggle-moon-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-slate-700 dark:text-slate-200 hidden"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+        </button>
+        <button id="login-btn" class="ml-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm py-2 px-5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 transition-all duration-300 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:scale-95 flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" /></svg>
           Admin
         </button>
@@ -66,10 +90,10 @@
 
     <main>
       <section class="text-center mb-12">
-        <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500 mb-4">
+        <h1 class="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500 dark:from-blue-400 dark:to-cyan-300 mb-4">
           Toilet Tracker YRS
         </h1>
-        <p class="text-lg text-slate-600 max-w-2xl mx-auto">
+        <p class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
           แพลตฟอร์มกลางสำหรับแจ้งและติดตามการแก้ไขปัญหา เพื่อสุขอนามัยที่ดีของทุกคน
         </p>
       </section>
@@ -79,7 +103,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" /></svg>
           แจ้งปัญหา
         </button>
-        <button id="how-to-use-btn" class="flex items-center gap-2 bg-white text-slate-600 font-semibold text-sm py-2.5 px-6 rounded-full hover:bg-slate-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 shadow-md active:scale-95">
+        <button id="how-to-use-btn" class="flex items-center gap-2 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold text-sm py-2.5 px-6 rounded-full hover:bg-slate-100 dark:hover:bg-slate-600 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 shadow-md active:scale-95">
            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.94 6.94a.75.75 0 11-1.06-1.061l2.5-2.5a.75.75 0 011.06 0l2.5 2.5a.75.75 0 11-1.06 1.061L11 5.439V9.25a.75.75 0 01-1.5 0V5.44l-1.06 1.061zM11.06 13.06a.75.75 0 101.06 1.061l2.5-2.5a.75.75 0 00-1.06-1.061L12 11.561V7.75a.75.75 0 00-1.5 0v3.81l-1.06-1.061a.75.75 0 10-1.06 1.061l2.5 2.5z" clip-rule="evenodd" /></svg>
           วิธีการใช้งาน
         </button>
@@ -94,42 +118,42 @@
     </main>
   </div>
 
-  <footer class="text-center w-full p-6 text-sm text-slate-500">
+  <footer class="text-center w-full p-6 text-sm text-slate-500 dark:text-slate-400">
     © 2025 Toilet Tracker Modern UI
   </footer>
 
   <div id="modal" class="modal fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50 hidden">
-    <div class="modal-content bg-white rounded-2xl shadow-2xl p-6 sm:p-8 max-w-md w-full border">
+    <div class="modal-content bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 sm:p-8 max-w-md w-full border dark:border-slate-700">
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-semibold text-slate-800">แจ้งปัญหาใหม่</h2>
-        <button id="close-modal-btn" class="text-slate-500 hover:text-slate-800 text-2xl">&times;</button>
+        <h2 class="text-xl font-semibold text-slate-800 dark:text-slate-200">แจ้งปัญหาใหม่</h2>
+        <button id="close-modal-btn" class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 text-2xl">&times;</button>
       </div>
       <form id="problem-form">
         <div class="mb-6">
-            <label class="block text-sm font-medium text-slate-700 mb-2">แนบรูปภาพ (ถ้ามี)</label>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">แนบรูปภาพ (ถ้ามี)</label>
             <div class="flex items-center gap-4">
-                <label for="image-input" class="cursor-pointer flex-shrink-0 flex items-center justify-center w-24 h-24 bg-slate-100 text-slate-400 rounded-lg hover:bg-slate-200 transition-colors relative border-2 border-dashed">
+                <label for="image-input" class="cursor-pointer flex-shrink-0 flex items-center justify-center w-24 h-24 bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors relative border-2 border-dashed dark:border-slate-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.776 48.776 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" /></svg>
                     <img id="image-preview" class="absolute inset-0 w-full h-full object-cover rounded-lg hidden" />
                 </label>
                 <input type="file" id="image-input" accept="image/*" class="hidden" />
                 <div class="relative w-full">
-                    <p class="text-xs text-slate-500">ไฟล์รูปภาพจะช่วยให้เราเข้าใจปัญหาได้ดียิ่งขึ้น</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">ไฟล์รูปภาพจะช่วยให้เราเข้าใจปัญหาได้ดียิ่งขึ้น</p>
                     <button type="button" id="remove-image-btn" class="mt-2 text-xs bg-red-100 text-red-700 py-1 px-3 rounded-full hover:bg-red-200 hidden">ลบรูปภาพ</button>
                 </div>
             </div>
         </div>
         <div class="mb-4">
-          <label for="room-id" class="block text-sm font-medium text-slate-700 mb-1">ห้องน้ำ (เช่น ตึก 5 ชั้น 2 ห้องหญิง)</label>
-          <input type="text" id="room-id" class="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+          <label for="room-id" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">ห้องน้ำ (เช่น ตึก 5 ชั้น 2 ห้องหญิง)</label>
+          <input type="text" id="room-id" class="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required />
         </div>
         <div class="mb-4">
-          <label for="user-name" class="block text-sm font-medium text-slate-700 mb-1">ชื่อผู้แจ้ง</label>
-          <input type="text" id="user-name" class="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+          <label for="user-name" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">ชื่อผู้แจ้ง</label>
+          <input type="text" id="user-name" class="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
         </div>
         <div class="mb-6">
-          <label for="problem-desc" class="block text-sm font-medium text-slate-700 mb-1">คำอธิบายปัญหา</label>
-          <textarea id="problem-desc" rows="3" class="w-full p-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
+          <label for="problem-desc" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">คำอธิบายปัญหา</label>
+          <textarea id="problem-desc" rows="3" class="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></textarea>
         </div>
         <button type="submit" class="w-full bg-blue-500 text-white font-bold py-2.5 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-300 flex items-center justify-center gap-2">
           บันทึกปัญหา
@@ -139,51 +163,51 @@
   </div>
 
   <div id="how-to-use-modal" class="modal fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white rounded-2xl shadow-lg p-6 sm:p-8 max-w-2xl w-full border max-h-[90vh] overflow-y-auto">
+        <div class="modal-content bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 sm:p-8 max-w-2xl w-full border dark:border-slate-700 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-semibold text-slate-800 flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-blue-500">
+                <h2 class="text-2xl font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-blue-500 dark:text-blue-400">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.311a7.5 7.5 0 01-7.5 0c-1.255 0-2.443.29-3.5.832a.75.75 0 01-.832-.75v-7.5a.75.75 0 01.75-.75h15a.75.75 0 01.75.75v7.5a.75.75 0 01-.832.75c-1.057-.542-2.245-.832-3.5-.832z" />
                     </svg>
                     วิธีการใช้งานและเหตุผลที่ทำ
                 </h2>
-                <button id="close-how-to-use-modal-btn" class="text-slate-500 hover:text-slate-800 text-3xl">&times;</button>
+                <button id="close-how-to-use-modal-btn" class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 text-3xl">&times;</button>
             </div>
             
-            <div class="space-y-6 text-slate-700">
+            <div class="space-y-6 text-slate-700 dark:text-slate-300">
                 <section>
-                    <h3 class="text-lg font-semibold text-slate-800 border-b pb-2 mb-3">เป้าหมายของเรา (Our Mission)</h3>
+                    <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 border-b dark:border-slate-600 pb-2 mb-3">เป้าหมายของเรา (Our Mission)</h3>
                     <p>
                         <strong>Toilet Tracker</strong> ถูกสร้างขึ้นเพื่อเป็นช่องทางกลางในการรับแจ้งปัญหาเกี่ยวกับห้องน้ำภายในสถาบันของเรา เพื่อให้การแก้ไขเป็นไปอย่างรวดเร็วและมีประสิทธิภาพ เรามุ่งหวังที่จะสร้างสภาพแวดล้อมที่ดีและถูกสุขลักษณะสำหรับทุกคน
                     </p>
                 </section>
                 <section>
-                    <h3 class="text-lg font-semibold text-slate-800 border-b pb-2 mb-3">สำหรับผู้ใช้งานทั่วไป: วิธีแจ้งปัญหา</h3>
+                    <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 border-b dark:border-slate-600 pb-2 mb-3">สำหรับผู้ใช้งานทั่วไป: วิธีแจ้งปัญหา</h3>
                     <ul class="list-decimal list-inside space-y-2">
-                        <li>คลิกที่ปุ่ม <strong class="text-green-600">"+ แจ้งปัญหา"</strong> บนหน้าหลัก</li>
+                        <li>คลิกที่ปุ่ม <strong class="text-green-600 dark:text-green-400">"+ แจ้งปัญหา"</strong> บนหน้าหลัก</li>
                         <li>กรอกข้อมูลในฟอร์มให้ครบถ้วน:
-                            <ul class="list-disc list-inside ml-6 mt-2 text-sm space-y-1">
+                            <ul class="list-disc list-inside ml-6 mt-2 text-sm space-y-1 text-slate-600 dark:text-slate-400">
                                 <li><strong>ห้องน้ำ:</strong> ระบุตำแหน่งให้ชัดเจนที่สุด (เช่น ตึก, ชั้น, ฝั่งชาย/หญิง)</li>
                                 <li><strong>ชื่อผู้แจ้ง:</strong> เพื่อการอ้างอิงและติดตาม (สามารถใส่ชื่อย่อได้)</li>
                                 <li><strong>คำอธิบายปัญหา:</strong> อธิบายปัญหาที่พบเจอ (เช่น ชักโครกตัน, น้ำไม่ไหล)</li>
                                 <li><strong>รูปภาพ:</strong> หากมีรูปภาพจะช่วยให้เจ้าหน้าที่เข้าใจปัญหาได้ง่ายขึ้น (ไม่บังคับ)</li>
                             </ul>
                         </li>
-                        <li>เมื่อกรอกครบแล้ว กดปุ่ม <strong class="text-blue-600">"บันทึกปัญหา"</strong></li>
+                        <li>เมื่อกรอกครบแล้ว กดปุ่ม <strong class="text-blue-600 dark:text-blue-400">"บันทึกปัญหา"</strong></li>
                         <li>รายการของคุณจะปรากฏบนหน้าหลักทันที และเข้าสู่กระบวนการตรวจสอบของเจ้าหน้าที่</li>
                     </ul>
                 </section>
                 <section>
-                    <h3 class="text-lg font-semibold text-slate-800 border-b pb-2 mb-3">สำหรับผู้ดูแลระบบ (Admin)</h3>
+                    <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 border-b dark:border-slate-600 pb-2 mb-3">สำหรับผู้ดูแลระบบ (Admin)</h3>
                     <ul class="list-decimal list-inside space-y-2">
-                        <li>คลิกที่ปุ่ม <strong class="text-blue-600">"Admin"</strong> และทำการล็อคอิน</li>
+                        <li>คลิกที่ปุ่ม <strong class="text-blue-600 dark:text-blue-400">"Admin"</strong> และทำการล็อคอิน</li>
                         <li>คุณจะเข้าสู่หน้าแอดมินซึ่งสามารถดูรายการปัญหาทั้งหมดได้</li>
-                        <li>ในหน้านี้ คุณสามารถ <strong class="text-yellow-600">แก้ไข</strong> รายละเอียดของปัญหา หรือ <strong class="text-red-600">ลบ</strong> รายการที่ไม่ถูกต้องได้</li>
+                        <li>ในหน้านี้ คุณสามารถ <strong class="text-yellow-600 dark:text-yellow-400">แก้ไข</strong> รายละเอียดของปัญหา หรือ <strong class="text-red-600 dark:text-red-400">ลบ</strong> รายการที่ไม่ถูกต้องได้</li>
                         <li>ผู้ดูแลระบบมีหน้าที่ตรวจสอบและส่งเรื่องต่อให้ฝ่ายที่เกี่ยวข้องเพื่อดำเนินการแก้ไข</li>
                     </ul>
                 </section>
             </div>
-            </div>
+        </div>
    </div>
 
   <div id="image-viewer-modal" class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden p-4">
@@ -212,6 +236,40 @@
     const imageViewerModal = document.getElementById('image-viewer-modal');
     const viewerImage = document.getElementById('viewer-image');
     const closeViewerBtn = document.getElementById('close-viewer-btn');
+
+    // --- DARK MODE Variables ---
+    const themeToggleBtn = document.getElementById('theme-toggle-btn');
+    const sunIcon = document.getElementById('theme-toggle-sun-icon');
+    const moonIcon = document.getElementById('theme-toggle-moon-icon');
+
+    // --- Dark Mode Logic ---
+    function updateThemeIcons() {
+        if (document.documentElement.classList.contains('dark')) {
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+        } else {
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        }
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+        // toggle dark class
+        document.documentElement.classList.toggle('dark');
+        
+        // update local storage
+        if (document.documentElement.classList.contains('dark')) {
+            localStorage.theme = 'dark';
+        } else {
+            localStorage.theme = 'light';
+        }
+        
+        // update icons
+        updateThemeIcons();
+    });
+    
+    // Set initial icon state on page load
+    document.addEventListener('DOMContentLoaded', updateThemeIcons);
 
 
     // --- Modal Control Logic ---
@@ -266,11 +324,11 @@
 
     // --- Empty State Logic ---
     const emptyStateHTML = `
-      <div id="empty-state" class="col-span-full text-center text-slate-500 p-10 flex flex-col items-center justify-center animate-fadeInUp">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-20 h-20 mb-4 text-slate-300">
+      <div id="empty-state" class="col-span-full text-center text-slate-500 dark:text-slate-400 p-10 flex flex-col items-center justify-center animate-fadeInUp">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-20 h-20 mb-4 text-slate-300 dark:text-slate-600">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <h3 class="text-xl font-semibold mb-2 text-slate-600">ยังไม่มีรายงานปัญหา</h3>
+        <h3 class="text-xl font-semibold mb-2 text-slate-600 dark:text-slate-300">ยังไม่มีรายงานปัญหา</h3>
         <p class="text-md">ร่วมเป็นคนแรกที่ช่วยดูแล! กดปุ่ม "แจ้งปัญหา" เมื่อคุณพบเจอสิ่งผิดปกติ</p>
       </div>
     `;
@@ -315,7 +373,7 @@
       const formattedTime = now.toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
 
       const newProblem = document.createElement('div');
-      newProblem.className = "problem-item bg-white/80 rounded-xl shadow-lg border border-slate-200/60 transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 opacity-0 overflow-hidden flex flex-col";
+      newProblem.className = "problem-item bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-lg border border-slate-200/60 dark:border-slate-700/60 transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 opacity-0 overflow-hidden flex flex-col";
       
       const imageHTML = imgSrc ? `<img src="${imgSrc}" class="w-full h-40 object-cover clickable-img cursor-pointer">` : '';
 
@@ -323,12 +381,12 @@
         ${imageHTML}
         <div class="p-5 flex flex-col flex-grow">
             <div class="flex justify-between items-center mb-3">
-                <h4 class="font-bold text-slate-800 text-md truncate pr-2">${roomId}</h4>
-                <div class="text-xs font-medium text-orange-600 bg-orange-100 py-1 px-3 rounded-full flex-shrink-0">รอดำเนินการ</div>
+                <h4 class="font-bold text-slate-800 dark:text-slate-200 text-md truncate pr-2">${roomId}</h4>
+                <div class="text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-400/20 py-1 px-3 rounded-full flex-shrink-0">รอดำเนินการ</div>
             </div>
-            <p class="text-slate-600 text-sm mb-4 flex-grow">${problemDesc}</p>
-            <div class="text-xs text-slate-400 border-t pt-3 flex justify-between items-center">
-                <span>โดย: <strong>${userName}</strong></span>
+            <p class="text-slate-600 dark:text-slate-400 text-sm mb-4 flex-grow">${problemDesc}</p>
+            <div class="text-xs text-slate-400 dark:text-slate-500 border-t dark:border-slate-700 pt-3 flex justify-between items-center">
+                <span>โดย: <strong class="text-slate-600 dark:text-slate-300 font-semibold">${userName}</strong></span>
                 <span>${formattedTime}</span>
             </div>
         </div>
