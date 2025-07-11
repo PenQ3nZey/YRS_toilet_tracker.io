@@ -4,14 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Toilet Tracker - Modern UI</title>
+  <link rel="manifest" id="manifest-link">
+  <meta name="theme-color" content="#ffffff">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <script>
     // --- DARK MODE INITIALIZATION ---
-    // On page load or when changing themes, best to add inline in `head` to avoid FOUC
-    // This checks local storage first, then system preference
     if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('dark');
     } else {
@@ -66,6 +67,19 @@
     .modal.active .modal-content {
       transform: scale(1);
       opacity: 1;
+    }
+    /* Chatbot styles */
+    .chat-bubble-user {
+        background-color: #3b82f6;
+        color: white;
+    }
+    .chat-bubble-bot {
+        background-color: #e5e7eb;
+        color: #1f2937;
+    }
+    .dark .chat-bubble-bot {
+        background-color: #4b5563;
+        color: #e5e7eb;
     }
   </style>
 </head>
@@ -129,8 +143,8 @@
         <button id="close-modal-btn" class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 text-2xl">&times;</button>
       </div>
       <form id="problem-form">
-        <div class="mb-6">
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">แนบรูปภาพ (ถ้ามี)</label>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">แนบรูปภาพ (AI จะช่วยวิเคราะห์)</label>
             <div class="flex items-center gap-4">
                 <label for="image-input" class="cursor-pointer flex-shrink-0 flex items-center justify-center w-24 h-24 bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors relative border-2 border-dashed dark:border-slate-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.776 48.776 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" /></svg>
@@ -138,10 +152,21 @@
                 </label>
                 <input type="file" id="image-input" accept="image/*" class="hidden" />
                 <div class="relative w-full">
-                    <p class="text-xs text-slate-500 dark:text-slate-400">ไฟล์รูปภาพจะช่วยให้เราเข้าใจปัญหาได้ดียิ่งขึ้น</p>
-                    <button type="button" id="remove-image-btn" class="mt-2 text-xs bg-red-100 text-red-700 py-1 px-3 rounded-full hover:bg-red-200 hidden">ลบรูปภาพ</button>
+                    <button type="button" id="remove-image-btn" class="absolute -top-2 -right-2 text-xs bg-red-100 text-red-700 w-6 h-6 rounded-full hover:bg-red-200 hidden items-center justify-center flex">&times;</button>
+                    <p id="ai-suggestion-text" class="text-xs text-slate-500 dark:text-slate-400">อัปโหลดภาพเพื่อรับคำแนะนำหมวดหมู่</p>
                 </div>
             </div>
+        </div>
+         <div class="mb-4">
+          <label for="problem-category" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">หมวดหมู่ปัญหา</label>
+          <select id="problem-category" class="w-full p-2 border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option>ทั่วไป</option>
+            <option>ท่อตัน / ชักโครก</option>
+            <option>น้ำรั่ว / ซึม</option>
+            <option>ความสะอาด</option>
+            <option>ของใช้หมด (กระดาษ/สบู่)</option>
+            <option>ไฟฟ้า / แสงสว่าง</option>
+          </select>
         </div>
         <div class="mb-4">
           <label for="room-id" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">ห้องน้ำ (เช่น ตึก 5 ชั้น 2 ห้องหญิง)</label>
@@ -162,144 +187,179 @@
     </div>
   </div>
 
-  <div id="how-to-use-modal" class="modal fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50 hidden">
-        <div class="modal-content bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-6 sm:p-8 max-w-2xl w-full border dark:border-slate-700 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-blue-500 dark:text-blue-400">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.311a7.5 7.5 0 01-7.5 0c-1.255 0-2.443.29-3.5.832a.75.75 0 01-.832-.75v-7.5a.75.75 0 01.75-.75h15a.75.75 0 01.75.75v7.5a.75.75 0 01-.832.75c-1.057-.542-2.245-.832-3.5-.832z" />
-                    </svg>
-                    วิธีการใช้งานและเหตุผลที่ทำ
-                </h2>
-                <button id="close-how-to-use-modal-btn" class="text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 text-3xl">&times;</button>
-            </div>
-            
-            <div class="space-y-6 text-slate-700 dark:text-slate-300">
-                <section>
-                    <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 border-b dark:border-slate-600 pb-2 mb-3">เป้าหมายของเรา (Our Mission)</h3>
-                    <p>
-                        <strong>Toilet Tracker</strong> ถูกสร้างขึ้นเพื่อเป็นช่องทางกลางในการรับแจ้งปัญหาเกี่ยวกับห้องน้ำภายในสถาบันของเรา เพื่อให้การแก้ไขเป็นไปอย่างรวดเร็วและมีประสิทธิภาพ เรามุ่งหวังที่จะสร้างสภาพแวดล้อมที่ดีและถูกสุขลักษณะสำหรับทุกคน
-                    </p>
-                </section>
-                <section>
-                    <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 border-b dark:border-slate-600 pb-2 mb-3">สำหรับผู้ใช้งานทั่วไป: วิธีแจ้งปัญหา</h3>
-                    <ul class="list-decimal list-inside space-y-2">
-                        <li>คลิกที่ปุ่ม <strong class="text-green-600 dark:text-green-400">"+ แจ้งปัญหา"</strong> บนหน้าหลัก</li>
-                        <li>กรอกข้อมูลในฟอร์มให้ครบถ้วน:
-                            <ul class="list-disc list-inside ml-6 mt-2 text-sm space-y-1 text-slate-600 dark:text-slate-400">
-                                <li><strong>ห้องน้ำ:</strong> ระบุตำแหน่งให้ชัดเจนที่สุด (เช่น ตึก, ชั้น, ฝั่งชาย/หญิง)</li>
-                                <li><strong>ชื่อผู้แจ้ง:</strong> เพื่อการอ้างอิงและติดตาม (สามารถใส่ชื่อย่อได้)</li>
-                                <li><strong>คำอธิบายปัญหา:</strong> อธิบายปัญหาที่พบเจอ (เช่น ชักโครกตัน, น้ำไม่ไหล)</li>
-                                <li><strong>รูปภาพ:</strong> หากมีรูปภาพจะช่วยให้เจ้าหน้าที่เข้าใจปัญหาได้ง่ายขึ้น (ไม่บังคับ)</li>
-                            </ul>
-                        </li>
-                        <li>เมื่อกรอกครบแล้ว กดปุ่ม <strong class="text-blue-600 dark:text-blue-400">"บันทึกปัญหา"</strong></li>
-                        <li>รายการของคุณจะปรากฏบนหน้าหลักทันที และเข้าสู่กระบวนการตรวจสอบของเจ้าหน้าที่</li>
-                    </ul>
-                </section>
-                <section>
-                    <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-200 border-b dark:border-slate-600 pb-2 mb-3">สำหรับผู้ดูแลระบบ (Admin)</h3>
-                    <ul class="list-decimal list-inside space-y-2">
-                        <li>คลิกที่ปุ่ม <strong class="text-blue-600 dark:text-blue-400">"Admin"</strong> และทำการล็อคอิน</li>
-                        <li>คุณจะเข้าสู่หน้าแอดมินซึ่งสามารถดูรายการปัญหาทั้งหมดได้</li>
-                        <li>ในหน้านี้ คุณสามารถ <strong class="text-yellow-600 dark:text-yellow-400">แก้ไข</strong> รายละเอียดของปัญหา หรือ <strong class="text-red-600 dark:text-red-400">ลบ</strong> รายการที่ไม่ถูกต้องได้</li>
-                        <li>ผู้ดูแลระบบมีหน้าที่ตรวจสอบและส่งเรื่องต่อให้ฝ่ายที่เกี่ยวข้องเพื่อดำเนินการแก้ไข</li>
-                    </ul>
-                </section>
-            </div>
-        </div>
-   </div>
+  <div id="how-to-use-modal" class="modal fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50 hidden">...</div>
 
-  <div id="image-viewer-modal" class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden p-4">
-    <button id="close-viewer-btn" class="absolute top-4 right-5 text-white text-4xl cursor-pointer hover:opacity-75">&times;</button>
-    <img id="viewer-image" class="max-w-full max-h-full rounded-xl border-4 border-white shadow-2xl" />
-  </div>
+  <div id="image-viewer-modal" class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden p-4">...</div>
+
+  <div id="chatbot-fab" class="fixed bottom-6 right-6 z-40 cursor-pointer">
+        <div class="bg-blue-600 dark:bg-blue-500 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-transform hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+            </svg>
+        </div>
+    </div>
+
+    <div id="chatbot-window" class="fixed bottom-24 right-6 z-40 w-80 h-[28rem] bg-white dark:bg-slate-800 rounded-xl shadow-2xl flex-col hidden transition-transform origin-bottom-right">
+        <div class="bg-blue-600 dark:bg-slate-700 text-white p-4 rounded-t-xl flex justify-between items-center">
+            <h3 class="font-semibold">ผู้ช่วย AI</h3>
+            <button id="close-chatbot-btn" class="text-white">&times;</button>
+        </div>
+        <div id="chatbot-messages" class="flex-1 p-4 overflow-y-auto">
+            </div>
+        <div class="p-2 border-t dark:border-slate-700">
+            <form id="chatbot-form" class="flex items-center gap-2">
+                <input id="chatbot-input" type="text" placeholder="พิมพ์ข้อความ..." class="w-full p-2 text-sm border border-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <button type="submit" class="bg-blue-500 text-white rounded-lg p-2 flex-shrink-0 hover:bg-blue-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
+                </button>
+            </form>
+        </div>
+    </div>
 
 
   <script>
+    // --- PWA Service Worker and Manifest Setup ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Create Manifest dynamically
+        const manifest = {
+            "name": "Toilet Tracker YRS",
+            "short_name": "ToiletTracker",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#f0f4f8",
+            "theme_color": "#3b82f6",
+            "description": "แพลตฟอร์มแจ้งปัญหาห้องน้ำ",
+            "icons": [{
+                "src": "https://www.gstatic.com/images/branding/product/1x/google_cloud_48dp.png",
+                "sizes": "48x48",
+                "type": "image/png"
+            }, {
+                "src": "https://www.gstatic.com/images/branding/product/1x/google_cloud_96dp.png",
+                "sizes": "96x96",
+                "type": "image/png"
+            }]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        const manifestURL = URL.createObjectURL(manifestBlob);
+        document.querySelector('#manifest-link').setAttribute('href', manifestURL);
+
+        // 2. Create and Register Service Worker
+        const swCode = `
+            const CACHE_NAME = 'toilet-tracker-v1';
+            const urlsToCache = [
+                '.',
+                'https://cdn.tailwindcss.com',
+                'https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap'
+            ];
+
+            self.addEventListener('install', event => {
+                event.waitUntil(
+                    caches.open(CACHE_NAME).then(cache => {
+                        console.log('Opened cache');
+                        return cache.addAll(urlsToCache);
+                    })
+                );
+            });
+
+            self.addEventListener('fetch', event => {
+                event.respondWith(
+                    caches.match(event.request).then(response => {
+                        if (response) {
+                            return response; // Serve from cache
+                        }
+                        return fetch(event.request); // Fetch from network
+                    })
+                );
+            });
+        `;
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        const swURL = URL.createObjectURL(swBlob);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swURL)
+                .then(registration => console.log('Service Worker registered with scope:', registration.scope))
+                .catch(error => console.log('Service Worker registration failed:', error));
+        }
+    });
+
+
     // --- All variables ---
     const addProblemBtn = document.getElementById('add-problem-btn');
     const modal = document.getElementById('modal');
     const closeModalBtn = document.getElementById('close-modal-btn');
-    const howToUseModal = document.getElementById('how-to-use-modal');
-    const howToUseBtn = document.getElementById('how-to-use-btn');
-    const closeHowToUseModalBtn = document.getElementById('close-how-to-use-modal-btn');
     const problemForm = document.getElementById('problem-form');
     const problemList = document.getElementById('problem-list');
-    const problemListContainer = document.getElementById('problem-list-container');
     const loginBtn = document.getElementById('login-btn');
     
-    // --- Image related variables ---
+    // --- Image and AI variables ---
     const imageInput = document.getElementById('image-input');
     const imagePreview = document.getElementById('image-preview');
     const removeImageBtn = document.getElementById('remove-image-btn');
-    const imageViewerModal = document.getElementById('image-viewer-modal');
-    const viewerImage = document.getElementById('viewer-image');
-    const closeViewerBtn = document.getElementById('close-viewer-btn');
+    const aiSuggestionText = document.getElementById('ai-suggestion-text');
+    const problemCategorySelect = document.getElementById('problem-category');
 
-    // --- DARK MODE Variables ---
+    // --- Chatbot variables ---
+    const chatbotFab = document.getElementById('chatbot-fab');
+    const chatbotWindow = document.getElementById('chatbot-window');
+    const closeChatbotBtn = document.getElementById('close-chatbot-btn');
+    const chatbotForm = document.getElementById('chatbot-form');
+    const chatbotInput = document.getElementById('chatbot-input');
+    const chatbotMessages = document.getElementById('chatbot-messages');
+
+    // --- DARK MODE Logic ---
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
     const sunIcon = document.getElementById('theme-toggle-sun-icon');
     const moonIcon = document.getElementById('theme-toggle-moon-icon');
 
-    // --- Dark Mode Logic ---
     function updateThemeIcons() {
         if (document.documentElement.classList.contains('dark')) {
-            sunIcon.classList.remove('hidden');
-            moonIcon.classList.add('hidden');
+            sunIcon.classList.remove('hidden'); moonIcon.classList.add('hidden');
         } else {
-            sunIcon.classList.add('hidden');
-            moonIcon.classList.remove('hidden');
+            sunIcon.classList.add('hidden'); moonIcon.classList.remove('hidden');
         }
     }
-
     themeToggleBtn.addEventListener('click', () => {
-        // toggle dark class
         document.documentElement.classList.toggle('dark');
-        
-        // update local storage
-        if (document.documentElement.classList.contains('dark')) {
-            localStorage.theme = 'dark';
-        } else {
-            localStorage.theme = 'light';
-        }
-        
-        // update icons
+        localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
         updateThemeIcons();
     });
     
-    // Set initial icon state on page load
-    document.addEventListener('DOMContentLoaded', updateThemeIcons);
-
-
     // --- Modal Control Logic ---
     function openModal(modalElement) {
         modalElement.classList.remove('hidden');
         setTimeout(() => modalElement.classList.add('active'), 10);
     }
-
     function closeModal(modalElement) {
         modalElement.classList.remove('active');
         setTimeout(() => modalElement.classList.add('hidden'), 300);
     }
-
     addProblemBtn.addEventListener('click', () => openModal(modal));
     closeModalBtn.addEventListener('click', () => closeModal(modal));
     modal.addEventListener('click', (event) => {
         if (event.target === modal) closeModal(modal);
     });
 
-    howToUseBtn.addEventListener('click', () => openModal(howToUseModal));
-    closeHowToUseModalBtn.addEventListener('click', () => closeModal(howToUseModal));
-    howToUseModal.addEventListener('click', (event) => {
-        if (event.target === howToUseModal) closeModal(howToUseModal);
-    });
+    // --- AI Simulation Logic ---
+    function simulateAIClassification(file) {
+        aiSuggestionText.textContent = '🤖 AI กำลังวิเคราะห์...';
+        aiSuggestionText.classList.add('animate-pulse');
 
-    closeViewerBtn.addEventListener('click', () => closeModal(imageViewerModal));
-    imageViewerModal.addEventListener('click', (e) => {
-        if(e.target === imageViewerModal) closeModal(imageViewerModal);
-    });
-
+        return new Promise(resolve => {
+            setTimeout(() => {
+                const fileName = file.name.toLowerCase();
+                let suggestion = 'ทั่วไป';
+                if (fileName.includes('clog') || fileName.includes('ตัน')) suggestion = 'ท่อตัน / ชักโครก';
+                else if (fileName.includes('leak') || fileName.includes('รั่ว')) suggestion = 'น้ำรั่ว / ซึม';
+                else if (fileName.includes('dirty') || fileName.includes('สะอาด')) suggestion = 'ความสะอาด';
+                else if (fileName.includes('paper') || fileName.includes('soap')) suggestion = 'ของใช้หมด (กระดาษ/สบู่)';
+                
+                aiSuggestionText.textContent = `AI แนะนำ: ${suggestion}`;
+                aiSuggestionText.classList.remove('animate-pulse');
+                problemCategorySelect.value = suggestion;
+                resolve(suggestion);
+            }, 1500);
+        });
+    }
 
     // --- Image Handling Logic ---
     imageInput.addEventListener('change', () => {
@@ -312,105 +372,201 @@
           removeImageBtn.classList.remove('hidden');
         };
         reader.readAsDataURL(file);
+        simulateAIClassification(file);
       }
     });
-
     removeImageBtn.addEventListener('click', () => {
       imageInput.value = '';
       imagePreview.src = '';
       imagePreview.classList.add('hidden');
       removeImageBtn.classList.add('hidden');
+      aiSuggestionText.textContent = 'อัปโหลดภาพเพื่อรับคำแนะนำหมวดหมู่';
     });
-
+    
     // --- Empty State Logic ---
-    const emptyStateHTML = `
-      <div id="empty-state" class="col-span-full text-center text-slate-500 dark:text-slate-400 p-10 flex flex-col items-center justify-center animate-fadeInUp">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-20 h-20 mb-4 text-slate-300 dark:text-slate-600">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <h3 class="text-xl font-semibold mb-2 text-slate-600 dark:text-slate-300">ยังไม่มีรายงานปัญหา</h3>
-        <p class="text-md">ร่วมเป็นคนแรกที่ช่วยดูแล! กดปุ่ม "แจ้งปัญหา" เมื่อคุณพบเจอสิ่งผิดปกติ</p>
-      </div>
-    `;
+    const emptyStateHTML = `<div id="empty-state" class="col-span-full text-center text-slate-500 dark:text-slate-400 p-10 flex flex-col items-center justify-center animate-fadeInUp"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-20 h-20 mb-4 text-slate-300 dark:text-slate-600"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><h3 class="text-xl font-semibold mb-2 text-slate-600 dark:text-slate-300">ยังไม่มีรายงานปัญหา</h3><p class="text-md">ร่วมเป็นคนแรกที่ช่วยดูแล! กดปุ่ม "แจ้งปัญหา" เมื่อคุณพบเจอสิ่งผิดปกติ</p></div>`;
 
     function checkEmptyState() {
+      const problems = document.querySelectorAll('.problem-item');
       const emptyStateEl = document.getElementById('empty-state');
-      if (problemList.children.length === 0) {
-        if (!emptyStateEl) {
-            problemList.innerHTML = emptyStateHTML;
-        }
+      if (problems.length === 0) {
+        if (!emptyStateEl) problemList.innerHTML = emptyStateHTML;
       } else {
-        if (emptyStateEl) {
-          emptyStateEl.remove();
-        }
+        if (emptyStateEl) emptyStateEl.remove();
       }
     }
-
+    
     function applyStaggerAnimation() {
         const items = problemList.querySelectorAll('.problem-item');
         items.forEach((item, index) => {
-            item.classList.remove('animate-fadeInUp');
-            void item.offsetWidth;
             item.style.animationDelay = `${index * 100}ms`;
             item.classList.add('animate-fadeInUp');
         });
     }
 
-    document.addEventListener('DOMContentLoaded', checkEmptyState);
+    // --- Form Submission & Offline Sync Logic ---
+    const getOfflineReports = () => JSON.parse(localStorage.getItem('offlineReports') || '[]');
+    const saveOfflineReports = (reports) => localStorage.setItem('offlineReports', JSON.stringify(reports));
 
-    // --- Form Submission Logic ---
+    function createProblemCard(problemData) {
+        if(document.getElementById('empty-state')) {
+            document.getElementById('empty-state').remove();
+        }
+
+        const newProblem = document.createElement('div');
+        newProblem.className = "problem-item bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-lg border border-slate-200/60 dark:border-slate-700/60 transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 opacity-0 overflow-hidden flex flex-col";
+        newProblem.dataset.id = problemData.id;
+
+        const imageHTML = problemData.imgSrc ? `<img src="${problemData.imgSrc}" class="w-full h-40 object-cover">` : '';
+
+        const statusClass = problemData.status === 'pending_sync' 
+            ? 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-400/20'
+            : 'text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-400/20';
+        const statusText = problemData.status === 'pending_sync' ? '📥 รอส่งเมื่อออนไลน์' : 'รอดำเนินการ';
+
+        newProblem.innerHTML = `
+            ${imageHTML}
+            <div class="p-5 flex flex-col flex-grow">
+                <div class="flex justify-between items-start mb-3 gap-2">
+                    <h4 class="font-bold text-slate-800 dark:text-slate-200 text-md truncate pr-2">${problemData.roomId}</h4>
+                    <div class="text-xs font-medium ${statusClass} py-1 px-3 rounded-full flex-shrink-0">${statusText}</div>
+                </div>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">หมวด: ${problemData.category}</p>
+                <p class="text-slate-600 dark:text-slate-400 text-sm mb-4 flex-grow">${problemData.problemDesc}</p>
+                <div class="text-xs text-slate-400 dark:text-slate-500 border-t dark:border-slate-700 pt-3 flex justify-between items-center">
+                    <span>โดย: <strong class="text-slate-600 dark:text-slate-300 font-semibold">${problemData.userName}</strong></span>
+                    <span>${problemData.formattedTime}</span>
+                </div>
+            </div>`;
+        
+        problemList.prepend(newProblem);
+    }
+    
     problemForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      if(document.getElementById('empty-state')) {
-          document.getElementById('empty-state').remove();
+      
+      const problemData = {
+          id: Date.now(),
+          roomId: document.getElementById('room-id').value,
+          userName: document.getElementById('user-name').value,
+          problemDesc: document.getElementById('problem-desc').value,
+          category: document.getElementById('problem-category').value,
+          imgSrc: imagePreview.src,
+          formattedTime: new Date().toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }),
+          status: 'online'
+      };
+
+      if (!navigator.onLine) {
+          problemData.status = 'pending_sync';
+          const offlineReports = getOfflineReports();
+          offlineReports.push(problemData);
+          saveOfflineReports(offlineReports);
+          alert('คุณอยู่ในโหมดออฟไลน์ รายงานของคุณจะถูกส่งอัตโนมัติเมื่อกลับมาออนไลน์');
       }
 
-      const roomId = document.getElementById('room-id').value;
-      const userName = document.getElementById('user-name').value;
-      const problemDesc = document.getElementById('problem-desc').value;
-      const imgSrc = imagePreview.src;
-      const now = new Date();
-      const formattedTime = now.toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
-
-      const newProblem = document.createElement('div');
-      newProblem.className = "problem-item bg-white/80 dark:bg-slate-800/80 rounded-xl shadow-lg border border-slate-200/60 dark:border-slate-700/60 transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 opacity-0 overflow-hidden flex flex-col";
-      
-      const imageHTML = imgSrc ? `<img src="${imgSrc}" class="w-full h-40 object-cover clickable-img cursor-pointer">` : '';
-
-      newProblem.innerHTML = `
-        ${imageHTML}
-        <div class="p-5 flex flex-col flex-grow">
-            <div class="flex justify-between items-center mb-3">
-                <h4 class="font-bold text-slate-800 dark:text-slate-200 text-md truncate pr-2">${roomId}</h4>
-                <div class="text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-400/20 py-1 px-3 rounded-full flex-shrink-0">รอดำเนินการ</div>
-            </div>
-            <p class="text-slate-600 dark:text-slate-400 text-sm mb-4 flex-grow">${problemDesc}</p>
-            <div class="text-xs text-slate-400 dark:text-slate-500 border-t dark:border-slate-700 pt-3 flex justify-between items-center">
-                <span>โดย: <strong class="text-slate-600 dark:text-slate-300 font-semibold">${userName}</strong></span>
-                <span>${formattedTime}</span>
-            </div>
-        </div>
-      `;
-      
-      problemList.prepend(newProblem);
+      createProblemCard(problemData);
       applyStaggerAnimation();
-
+      
       problemForm.reset();
-      removeImageBtn.click(); // Reset the image form
+      removeImageBtn.click();
       closeModal(modal);
     });
 
-    // --- Event listener for clicking images on cards ---
-    problemList.addEventListener('click', (e) => {
-        if (e.target.classList.contains('clickable-img')) {
-            viewerImage.src = e.target.src;
-            openModal(imageViewerModal);
+    async function syncOfflineReports() {
+        const offlineReports = getOfflineReports();
+        if (offlineReports.length === 0) return;
+
+        console.log(`Syncing ${offlineReports.length} offline reports...`);
+        alert(`กำลังส่ง ${offlineReports.length} รายงานที่รอค้างอยู่...`);
+
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 2000)); 
+
+        offlineReports.forEach(report => {
+            const card = document.querySelector(`.problem-item[data-id='${report.id}']`);
+            if (card) {
+                const statusDiv = card.querySelector('.text-xs');
+                statusDiv.textContent = 'รอดำเนินการ';
+                statusDiv.className = 'text-xs font-medium text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-400/20 py-1 px-3 rounded-full flex-shrink-0';
+            }
+        });
+        
+        saveOfflineReports([]); // Clear offline storage
+        console.log('Sync complete.');
+    }
+
+    // --- CHATBOT Logic ---
+    chatbotFab.addEventListener('click', () => {
+        chatbotWindow.classList.toggle('hidden');
+        chatbotWindow.classList.toggle('flex');
+    });
+    closeChatbotBtn.addEventListener('click', () => {
+        chatbotWindow.classList.add('hidden');
+        chatbotWindow.classList.remove('flex');
+    });
+
+    function addMessageToChat(text, sender) {
+        const bubble = document.createElement('div');
+        bubble.className = `w-fit max-w-[80%] rounded-xl p-3 text-sm mb-2 ${sender === 'user' ? 'chat-bubble-user self-end' : 'chat-bubble-bot self-start'}`;
+        bubble.textContent = text;
+        chatbotMessages.appendChild(bubble);
+        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+
+    function getBotResponse(userInput) {
+        const lowerInput = userInput.toLowerCase();
+        if (lowerInput.includes('แจ้งปัญหา') || lowerInput.includes('ทำยังไง')) {
+            return 'คุณสามารถแจ้งปัญหาได้โดยกดปุ่ม "+ แจ้งปัญหา" สีฟ้าบนหน้าจอหลัก แล้วกรอกข้อมูลให้ครบถ้วนครับ';
+        } else if (lowerInput.includes('สถานะ')) {
+            return 'สถานะจะมี "รอดำเนินการ" 🟠, "กำลังแก้ไข" 🔵, และ "แก้ไขแล้ว" 🟢 ครับ';
+        } else if (lowerInput.includes('admin') || lowerInput.includes('ติดต่อ')) {
+            return 'หากต้องการความช่วยเหลือจากผู้ดูแลระบบโดยตรง กรุณาใช้ปุ่ม "Admin" ที่มุมบนขวาของจอครับ';
+        } else if (lowerInput.includes('สวัสดี') || lowerInput.includes('หวัดดี')) {
+            return 'สวัสดีครับ มีอะไรให้ผมช่วยไหมครับ?';
+        } else {
+            return 'ขออภัยครับ ผมไม่เข้าใจคำถามนี้ ลองถามเกี่ยวกับ "การแจ้งปัญหา" หรือ "สถานะ" ดูนะครับ';
+        }
+    }
+    
+    chatbotForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const userInput = chatbotInput.value.trim();
+        if (!userInput) return;
+
+        addMessageToChat(userInput, 'user');
+        chatbotInput.value = '';
+
+        setTimeout(() => {
+            const botResponse = getBotResponse(userInput);
+            addMessageToChat(botResponse, 'bot');
+        }, 1000);
+    });
+
+
+    // --- Initial Load ---
+    document.addEventListener('DOMContentLoaded', () => {
+        updateThemeIcons();
+        checkEmptyState();
+        getOfflineReports().forEach(report => createProblemCard(report));
+        applyStaggerAnimation();
+        
+        // Initial bot message
+        setTimeout(() => {
+            addMessageToChat('สวัสดีครับ ผมคือผู้ช่วย AI มีอะไรให้ช่วยไหมครับ? ลองพิมพ์ "แจ้งปัญหายังไง"', 'bot');
+        }, 1000);
+
+        if (navigator.onLine) {
+            syncOfflineReports();
         }
     });
 
+    window.addEventListener('online', syncOfflineReports);
+    
+    // This makes the Admin button work
     loginBtn.addEventListener('click', () => {
       window.location.href = 'login.html';
     });
+
   </script>
 </body>
 </html>
